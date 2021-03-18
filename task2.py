@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-import re
-
+from collections import defaultdict, OrderedDict
+from string import ascii_uppercase
 HOST = 'https://ru.wikipedia.org/'
 URL = 'https://ru.wikipedia.org/w/index.php?title=%D0%9A%D0%B0%D1%82%D0%B5%D0%B3%D0%BE%D1%80%D0%B8%D1%8F' \
       ':%D0%96%D0%B8%D0%B2%D0%BE%D1%82%D0%BD%D1%8B%D0%B5_%D0%BF%D0%BE_%D0%B0%D0%BB%D1%84%D0%B0%D0%B2%D0%B' \
@@ -38,31 +38,37 @@ def parser():
     if html.status_code == 200:
         pages = get_params(html)
         animals = []
-        print(pages)
-        #for href in pages:
-
+        animals.append(get_content(html.text))
         while "from=A" not in pages:
-            if animals:
-                value = get_content(html.text)
-                valueLetter = value[0]
-                last_letter = animals[-1][0]
-                print(valueLetter)
-            print(f"parsing letter: {pages}")
+            value = get_content(html.text)
+            valueLetter = value[0]
             html = get_html(HOST + pages)
-
             animals.append(get_content(html.text))
             pages = get_params(html)
+            print(valueLetter)
+        return animals
 
-        return animals[0].count('\n')-1
     else:
         print('Error!')
 
-def get_number_of_animals(alphabet='абв'.upper()):
-    count = []
-    for x in alphabet:
-        count.append(f"{x} : {parser(x)}")
-    return ('\n'.join(count))
 
+def letter_count():
+    animals = parser()
+    combined_list=[]
+    eng_alphabet = ascii_uppercase
+    for el in animals:
+        combined_list.extend(el)
+    list_to_str = '\n'.join(combined_list)
+    pure_arr = list_to_str.split('\n')
+    capital_letters = ''
+    for el in pure_arr:
+        if el[0] not in eng_alphabet:
+            capital_letters += el[0]
+    count_for_letters = defaultdict(int)
+    for el in capital_letters:
+        count_for_letters[el] += 1
+    sortted_counter = OrderedDict(sorted(count_for_letters.items()))
+    for key, value in sortted_counter.items():
+        print(key, ':', value)
 
-print(parser())
-
+letter_count()
